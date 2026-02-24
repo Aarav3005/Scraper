@@ -141,3 +141,7 @@ firebase deploy --only hosting
 ## Dependencies
 
 Backend Python dependencies in `backend/requirements.txt`.
+
+## Testing Helper Inputs
+
+See `backend/tests/test_cases.py` for ready-to-run college/course pairs for manual validation.
