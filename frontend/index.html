@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shiksha Scraper + AI Analyzer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <h1>Shiksha Dynamic College Analyzer</h1>
+    <section class="card">
+      <h2>Single College</h2>
+      <input id="college" placeholder="College name" />
+      <input id="course" placeholder="Course name" />
+      <button id="runBtn">Scrape + Parse</button>
+    </section>
+
+    <section class="card">
+      <h2>Compare Colleges</h2>
+      <textarea id="compareInput" placeholder='[{"college_name":"IIT Delhi","course_name":"B.Tech Mechanical Engineering"},{"college_name":"NIT Trichy","course_name":"B.Tech Mechanical Engineering"}]'></textarea>
+      <button id="compareBtn">Generate AI Comparison</button>
+    </section>
+
+    <section id="output" class="card"><pre></pre></section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
