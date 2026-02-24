@@ -2,15 +2,11 @@ from __future__ import annotations
 
 import csv
 import json
-import logging
 import re
 from pathlib import Path
 from typing import Any, Dict, List
 
 from bs4 import BeautifulSoup
-
-
-logger = logging.getLogger(__name__)
 
 
 class ParserEngine:
@@ -26,26 +22,26 @@ class ParserEngine:
         }
         self._write_reviews_csv(storage_path, parsed["reviews"])
         (storage_path / "metadata.json").write_text(json.dumps(parsed, indent=2), encoding="utf-8")
-        logger.info("Parsed %s reviews for %s", len(parsed["reviews"]), storage_path)
         return parsed
 
     def _parse_reviews(self, storage_path: Path) -> List[Dict[str, Any]]:
         rows: List[Dict[str, Any]] = []
-        selectors = "[data-review-id], .review-card, .user-review"
         for page in sorted(storage_path.glob("reviews_page_*.html")):
             soup = BeautifulSoup(page.read_text(encoding="utf-8"), "html.parser")
-            for card in soup.select(selectors):
+            for card in soup.select("article, div"):
                 text = " ".join(card.get_text(" ", strip=True).split())
-                if self._is_boilerplate(text):
+                if len(text) < 80:
                     continue
-                rating = self._extract_rating(card, text)
-                title = self._text_from_selectors(card, ["h2", "h3", ".review-title", "[class*='title']"]) or text[:120]
+                rating = None
+                rate_m = re.search(r"([0-5](?:\.\d)?)\s*/\s*5", text)
+                if rate_m:
+                    rating = float(rate_m.group(1))
                 rows.append(
                     {
                         "rating": rating,
-                        "pros": self._extract_field(card, text, "Pros"),
-                        "cons": self._extract_field(card, text, "Cons"),
-                        "title": title.strip(),
+                        "pros": self._extract_after(text, "Pros:"),
+                        "cons": self._extract_after(text, "Cons:"),
+                        "title": text[:120],
                         "year": self._search(text, r"(20\d{2})"),
                         "reviewer_type": self._search(text, r"(Student|Alumni)", re.I),
                     }
@@ -116,31 +112,8 @@ class ParserEngine:
         m = re.search(pattern, text, flags)
         return m.group(1) if m else None
 
-    def _extract_field(self, card, text: str, marker: str) -> str | None:
-        marked = self._text_from_selectors(card, [f"[class*='{marker.lower()}']", f"[data-label*='{marker}']"])
-        if marked:
-            return marked
-        regex = re.search(rf"{marker}\s*:?\s*(.+?)(?:\bPros\b|\bCons\b|$)", text, flags=re.I)
-        return regex.group(1).strip()[:240] if regex else None
-
-    def _extract_rating(self, card, text: str) -> float | None:
-        rating_text = self._text_from_selectors(card, ["[class*='rating']", "[data-rating]"])
-        source = f"{rating_text or ''} {text}"
-        rate_m = re.search(r"([0-5](?:\.\d)?)\s*/\s*5", source)
-        return float(rate_m.group(1)) if rate_m else None
-
-    def _text_from_selectors(self, card, selectors: List[str]) -> str | None:
-        for selector in selectors:
-            node = card.select_one(selector)
-            if node:
-                value = node.get_text(" ", strip=True)
-                if value:
-                    return value
-        return None
-
-    def _is_boilerplate(self, text: str) -> bool:
-        if len(text) < 50:
-            return True
-        boilerplate_tokens = ["write a review", "helpful", "read more", "sort by"]
-        low = text.lower()
-        return any(token in low for token in boilerplate_tokens)
+    def _extract_after(self, text: str, marker: str) -> str | None:
+        if marker not in text:
+            return None
+        tail = text.split(marker, 1)[1]
+        return tail.split("Cons:", 1)[0][:240].strip()
