@@ -1,0 +1,6 @@
+body { font-family: Arial, sans-serif; background: #f4f7fb; margin: 0; }
+main { max-width: 1000px; margin: 24px auto; padding: 12px; }
+.card { background: white; padding: 16px; margin: 12px 0; border-radius: 10px; box-shadow: 0 1px 5px rgba(0,0,0,.1); }
+input, textarea { width: 100%; margin: 6px 0; padding: 10px; box-sizing: border-box; }
+button { padding: 10px 14px; background: #185abc; color: white; border: 0; border-radius: 6px; cursor: pointer; }
+pre { white-space: pre-wrap; word-wrap: break-word; }
